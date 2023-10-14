@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int solve(int *cost, int *time, int i, int wallsrem, int **dp, int size) {
+    // Base case 1: If there are no walls remaining to paint, the cost is 0.
+    if (wallsrem <= 0) return 0;
+    // Base case 2: If we have considered all the walls but still have walls remaining to paint, return a large value.
+    if (i >= size) return 500000000; // A large value indicating infeasibility or infinity.
+
+    // If the result for the current state (i, wallsrem) has already been calculated, return it.
+    if (dp[i][wallsrem] != -1) return dp[i][wallsrem];
+
+    // Calculate the minimum cost for the current state by either not taking the current wall or taking it.
+    // 1. 'nottake' represents the cost when we do not paint the current wall (skip to the next wall).
+    int nottake = solve(cost, time, i + 1, wallsrem, dp, size);
+
+    // 2. 'take' represents the cost when we paint the current wall (subtract its time from remaining walls).
+    int take = cost[i] + solve(cost, time, i + 1, wallsrem - time[i] - 1, dp, size);
+
+    // Choose the minimum cost between 'nottake' and 'take' and store it in the DP table.
+    return dp[i][wallsrem] = (take < nottake) ? take : nottake;
+}
+
+int paintWalls(int *cost,int costSize, int *time, int size) {
+    // Initialize a DP table with -1 values to memoize results.
+    int **dp = (int **)malloc((size + 1) * sizeof(int *));
+    for (int i = 0; i <= size; i++) {
+        dp[i] = (int *)malloc((size + 1) * sizeof(int));
+        for (int j = 0; j <= size; j++) {
+            dp[i][j] = -1;
+        }
+    }
+
+    // Call the recursive 'solve' function to find the minimum cost for painting all the walls.
+    // Start from the first wall (index 0) and consider all available walls initially.
+    int result = solve(cost, time, 0, size, dp, size);
+
+    // Free dynamically allocated memory
+    for (int i = 0; i <= size; i++) {
+        free(dp[i]);
+    }
+    free(dp);
+
+    return result;
+}
